@@ -1,0 +1,8 @@
+/target/
+.nb-gradle/
+.nb-build/
+.nb-dist/
+.nb-tmp/
+.idea/
+*.iml
+.DS_Store
