@@ -1,30 +1,31 @@
-# PW05 – JDBC (Java 2)
+# Movies Collection – JDBC Practical Work (PW05)
 
-## Description
-This project is part of the **Java 2 – Practical Work 05 (JDBC)**.
-It demonstrates how to use **JDBC** and the **DAO pattern** to interact with a
-**SQLite database**.
+## Author
+Naomi Nketsiah  
+Master 1 Software Engineering – JUNIA ISEN  
+Java 2 – JDBC Practical Work (PW05)
 
-The project includes DAO implementations for `Genre` and `Movie`, with unit
-tests validating all database operations.
+## Project Description
+This project implements database access in Java using JDBC and SQLite,
+following the DAO (Data Access Object) design pattern.
+
+It includes management of movies and genres, with unit tests validating
+all required operations.
+
+## Bonus Stages Implemented
+- **Bonus Stage 1**: Database access refactored to use `DriverManager`
+  instead of `SQLiteDataSource`, making the code database-agnostic.
+- **Bonus Stage 2**: `Optional<Genre>` used instead of `null` in
+  `getGenre` to improve null safety.
 
 ## Technologies
 - Java 21
-- Maven
 - JDBC
 - SQLite
+- Maven
 - JUnit 5
+- AssertJ
 
-## Project Structure
-- `DataSourceFactory`: provides database connections
-- `GenreDao`: JDBC operations for genres
-- `MovieDao`: JDBC operations for movies (JOINs, generated IDs)
-- Unit tests located in `src/test/java`
-
-## How to run the tests
+## How to Run Tests
 ```bash
 mvn test
-
-```md
-## Author
-Naomi Nketsiah

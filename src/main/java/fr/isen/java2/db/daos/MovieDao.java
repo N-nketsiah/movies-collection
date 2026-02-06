@@ -26,19 +26,25 @@ public class MovieDao {
 	 */
 	public List<Movie> listMovies() {
 		List<Movie> movies = new ArrayList<>();
-		String sqlQuery = "SELECT * FROM movie " +
-						  "JOIN genre ON movie.genre_id = genre.idgenre";
-		
+
+		String sqlQuery =
+			"SELECT " +
+			"movie.idmovie, movie.title, movie.release_date, movie.duration, " +
+			"movie.director, movie.summary, " +
+			"genre.idgenre AS genre_id, genre.name AS genre_name " +
+			"FROM movie " +
+			"JOIN genre ON movie.genre_id = genre.idgenre";
+
 		try (Connection connection = DataSourceFactory.getDataSource().getConnection();
 			 Statement statement = connection.createStatement();
 			 ResultSet resultSet = statement.executeQuery(sqlQuery)) {
-			
+
 			while (resultSet.next()) {
 				Movie movie = createMovieFromResultSet(resultSet);
 				movies.add(movie);
 			}
 			return movies;
-			
+
 		} catch (SQLException e) {
 			throw new RuntimeException("Error while fetching movies from database", e);
 		}
@@ -53,15 +59,21 @@ public class MovieDao {
 	 */
 	public List<Movie> listMoviesByGenre(String genreName) {
 		List<Movie> movies = new ArrayList<>();
-		String sqlQuery = "SELECT * FROM movie " +
-						  "JOIN genre ON movie.genre_id = genre.idgenre " +
-						  "WHERE genre.name = ?";
-		
+
+		String sqlQuery =
+			"SELECT " +
+			"movie.idmovie, movie.title, movie.release_date, movie.duration, " +
+			"movie.director, movie.summary, " +
+			"genre.idgenre AS genre_id, genre.name AS genre_name " +
+			"FROM movie " +
+			"JOIN genre ON movie.genre_id = genre.idgenre " +
+			"WHERE genre.name = ?";
+
 		try (Connection connection = DataSourceFactory.getDataSource().getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sqlQuery)) {
-			
+
 			statement.setString(1, genreName);
-			
+
 			try (ResultSet resultSet = statement.executeQuery()) {
 				while (resultSet.next()) {
 					Movie movie = createMovieFromResultSet(resultSet);
@@ -69,7 +81,7 @@ public class MovieDao {
 				}
 			}
 			return movies;
-			
+
 		} catch (SQLException e) {
 			throw new RuntimeException("Error while fetching movies by genre: " + genreName, e);
 		}
@@ -84,22 +96,23 @@ public class MovieDao {
 	 * @return a new Movie object with the same information plus the generated id
 	 */
 	public Movie addMovie(Movie movie) {
-		String sqlQuery = "INSERT INTO movie(title, release_date, genre_id, duration, director, summary) " +
-						  "VALUES(?, ?, ?, ?, ?, ?)";
-		
+		String sqlQuery =
+			"INSERT INTO movie(title, release_date, genre_id, duration, director, summary) " +
+			"VALUES(?, ?, ?, ?, ?, ?)";
+
 		try (Connection connection = DataSourceFactory.getDataSource().getConnection();
 			 PreparedStatement statement = connection.prepareStatement(
 					 sqlQuery, Statement.RETURN_GENERATED_KEYS)) {
-			
+
 			statement.setString(1, movie.getTitle());
 			statement.setDate(2, Date.valueOf(movie.getReleaseDate()));
 			statement.setInt(3, movie.getGenre().getId());
 			statement.setInt(4, movie.getDuration());
 			statement.setString(5, movie.getDirector());
 			statement.setString(6, movie.getSummary());
-			
+
 			statement.executeUpdate();
-			
+
 			// Retrieve the generated id
 			try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
 				if (generatedKeys.next()) {
@@ -117,30 +130,26 @@ public class MovieDao {
 					);
 				}
 			}
-			
+
 			throw new RuntimeException("Failed to retrieve generated id for movie");
-			
+
 		} catch (SQLException e) {
 			throw new RuntimeException("Error while adding movie: " + movie.getTitle(), e);
 		}
 	}
-	
+
 	/**
 	 * Helper method to create a Movie object from a ResultSet.
-	 * Expects the ResultSet to contain both movie and genre columns from a JOIN query.
-	 * 
-	 * @param resultSet the ResultSet positioned at a valid row
-	 * @return a Movie object with all fields populated
-	 * @throws SQLException if there's an error reading from the ResultSet
+	 * Uses aliased column names to avoid ambiguity.
 	 */
 	private Movie createMovieFromResultSet(ResultSet resultSet) throws SQLException {
-		// Create the Genre object from the joined genre table
+
 		Genre genre = new Genre(
-			resultSet.getInt("idgenre"),
-			resultSet.getString("name")
+			resultSet.getInt("genre_id"),
+			resultSet.getString("genre_name")
 		);
-		
-		// Create and return the Movie object
+
+		//  return the Movie object
 		return new Movie(
 			resultSet.getInt("idmovie"),
 			resultSet.getString("title"),

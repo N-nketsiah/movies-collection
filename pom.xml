@@ -34,10 +34,14 @@
 			<version>3.27.7</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- BONUS STAGE 1: SQLite driver is now a runtime-only dependency -->
+		<!-- The code compiles without it, but needs it to run -->
+		<!-- This proves our code is database-agnostic using DriverManager -->
 		<dependency>
 		    <groupId>org.xerial</groupId>
 		    <artifactId>sqlite-jdbc</artifactId>
 		    <version>3.51.1.0</version>
+		    <scope>runtime</scope>
 		</dependency>
 	</dependencies>
 

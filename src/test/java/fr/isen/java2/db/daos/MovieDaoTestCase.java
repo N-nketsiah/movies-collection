@@ -25,30 +25,31 @@ public class MovieDaoTestCase {
 	
 	@BeforeEach
 	public void initDb() throws Exception {
-		Connection connection = DataSourceFactory.getDataSource().getConnection();
-		Statement stmt = connection.createStatement();
-		stmt.executeUpdate(
-				"CREATE TABLE IF NOT EXISTS genre (idgenre INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT , name VARCHAR(50) NOT NULL);");
-		stmt.executeUpdate(
-				"CREATE TABLE IF NOT EXISTS movie (\r\n"
-				+ "  idmovie INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,\r\n" + "  title VARCHAR(100) NOT NULL,\r\n"
-				+ "  release_date DATETIME NULL,\r\n" + "  genre_id INT NOT NULL,\r\n" + "  duration INT NULL,\r\n"
-				+ "  director VARCHAR(100) NOT NULL,\r\n" + "  summary MEDIUMTEXT NULL,\r\n"
-				+ "  CONSTRAINT genre_fk FOREIGN KEY (genre_id) REFERENCES genre (idgenre));");
-		stmt.executeUpdate("DELETE FROM movie");
-		stmt.executeUpdate("DELETE FROM genre");
-		stmt.executeUpdate("DELETE FROM sqlite_sequence WHERE name='movie'");
-		stmt.executeUpdate("DELETE FROM sqlite_sequence WHERE name='genre'");
-		stmt.executeUpdate("INSERT INTO genre(idgenre,name) VALUES (1,'Drama')");
-		stmt.executeUpdate("INSERT INTO genre(idgenre,name) VALUES (2,'Comedy')");
-		stmt.executeUpdate("INSERT INTO movie(idmovie,title, release_date, genre_id, duration, director, summary) "
-				+ "VALUES (1, 'Title 1', '2015-11-26 12:00:00.000', 1, 120, 'director 1', 'summary of the first movie')");
-		stmt.executeUpdate("INSERT INTO movie(idmovie,title, release_date, genre_id, duration, director, summary) "
-				+ "VALUES (2, 'My Title 2', '2015-11-14 12:00:00.000', 2, 114, 'director 2', 'summary of the second movie')");
-		stmt.executeUpdate("INSERT INTO movie(idmovie,title, release_date, genre_id, duration, director, summary) "
-				+ "VALUES (3, 'Third title', '2015-12-12 12:00:00.000', 2, 176, 'director 3', 'summary of the third movie')");
-		stmt.close();
-		connection.close();
+		try (Connection connection = DataSourceFactory.getDataSource().getConnection();
+			 Statement stmt = connection.createStatement()) {
+			
+			stmt.executeUpdate(
+					"CREATE TABLE IF NOT EXISTS genre (idgenre INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT , name VARCHAR(50) NOT NULL);");
+			stmt.executeUpdate(
+					"CREATE TABLE IF NOT EXISTS movie (\r\n"
+					+ "  idmovie INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,\r\n" + "  title VARCHAR(100) NOT NULL,\r\n"
+					+ "  release_date DATETIME NULL,\r\n" + "  genre_id INT NOT NULL,\r\n" + "  duration INT NULL,\r\n"
+					+ "  director VARCHAR(100) NOT NULL,\r\n" + "  summary MEDIUMTEXT NULL,\r\n"
+					+ "  CONSTRAINT genre_fk FOREIGN KEY (genre_id) REFERENCES genre (idgenre));");
+			stmt.executeUpdate("DELETE FROM movie");
+			stmt.executeUpdate("DELETE FROM genre");
+			stmt.executeUpdate("DELETE FROM sqlite_sequence WHERE name='movie'");
+			stmt.executeUpdate("DELETE FROM sqlite_sequence WHERE name='genre'");
+			stmt.executeUpdate("INSERT INTO genre(idgenre,name) VALUES (1,'Drama')");
+			stmt.executeUpdate("INSERT INTO genre(idgenre,name) VALUES (2,'Comedy')");
+			stmt.executeUpdate("INSERT INTO movie(idmovie,title, release_date, genre_id, duration, director, summary) "
+					+ "VALUES (1, 'Title 1', '2015-11-26 12:00:00.000', 1, 120, 'director 1', 'summary of the first movie')");
+			stmt.executeUpdate("INSERT INTO movie(idmovie,title, release_date, genre_id, duration, director, summary) "
+					+ "VALUES (2, 'My Title 2', '2015-11-14 12:00:00.000', 2, 114, 'director 2', 'summary of the second movie')");
+			stmt.executeUpdate("INSERT INTO movie(idmovie,title, release_date, genre_id, duration, director, summary) "
+					+ "VALUES (3, 'Third title', '2015-12-12 12:00:00.000', 2, 176, 'director 3', 'summary of the third movie')");
+		}
+		// Connection and Statement automatically closed here!
 	}
 	
 	/**
@@ -159,23 +160,19 @@ public class MovieDaoTestCase {
 		assertThat(addedMovie.getSummary()).isEqualTo("A thief who steals corporate secrets through dream-sharing technology");
 		
 		// Verify the movie was actually inserted in the database
-		Connection connection = DataSourceFactory.getDataSource().getConnection();
-		Statement statement = connection.createStatement();
-		ResultSet resultSet = statement.executeQuery(
-			"SELECT * FROM movie WHERE title='Inception'"
-		);
-		
-		assertThat(resultSet.next()).isTrue();
-		assertThat(resultSet.getInt("idmovie")).isEqualTo(addedMovie.getId());
-		assertThat(resultSet.getString("title")).isEqualTo("Inception");
-		assertThat(resultSet.getInt("genre_id")).isEqualTo(1);
-		assertThat(resultSet.getInt("duration")).isEqualTo(148);
-		assertThat(resultSet.getString("director")).isEqualTo("Christopher Nolan");
-		assertThat(resultSet.next()).isFalse();
-		
-		resultSet.close();
-		statement.close();
-		connection.close();
+		try (Connection connection = DataSourceFactory.getDataSource().getConnection();
+			 Statement statement = connection.createStatement();
+			 ResultSet resultSet = statement.executeQuery("SELECT * FROM movie WHERE title='Inception'")) {
+			
+			assertThat(resultSet.next()).isTrue();
+			assertThat(resultSet.getInt("idmovie")).isEqualTo(addedMovie.getId());
+			assertThat(resultSet.getString("title")).isEqualTo("Inception");
+			assertThat(resultSet.getInt("genre_id")).isEqualTo(1);
+			assertThat(resultSet.getInt("duration")).isEqualTo(148);
+			assertThat(resultSet.getString("director")).isEqualTo("Christopher Nolan");
+			assertThat(resultSet.next()).isFalse();
+		}
+		// Resources automatically closed here!
 		
 		// Verify we can retrieve it through listMovies
 		List<Movie> allMovies = movieDao.listMovies();
